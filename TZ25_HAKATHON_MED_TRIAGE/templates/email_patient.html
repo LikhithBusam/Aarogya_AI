@@ -93,20 +93,28 @@
         </style>
     </head>
     <body>
+        {% if status == "accepted" %}
         <div class="header">
             <h2>Your Appointment is Confirmed!</h2>
         </div>
         <div class="content">
+            <div class="status-message status-accepted">
+                <h3>✅ Appointment Accepted</h3>
+                <p>Great news! {{ doctor_name }} has accepted your appointment request.</p>
+            </div>
+            
             <div class="section">
                 <p>Dear Patient,</p>
-                <p>Your appointment with {{ doctor_name }} has been scheduled successfully.</p>
+                <p>Your appointment with {{ doctor_name }} has been confirmed and scheduled successfully.</p>
             </div>
             
             <div class="section doctor-info">
-                <div class="doctor-avatar">{{ doctor_name[0] }}</div>
-                <div>
+                <div class="doctor-avatar">{{ doctor_name[0] if doctor_name else "D" }}</div>
+                <div class="doctor-details">
                     <h3>{{ doctor_name }}</h3>
+                    {% if doctor_specialization %}
                     <p>{{ doctor_specialization }}</p>
+                    {% endif %}
                 </div>
             </div>
             
@@ -114,22 +122,102 @@
                 <p><strong>Date & Time:</strong> {{ scheduled_time }}</p>
             </div>
             
+            {% if symptom_summary %}
             <div class="section">
                 <div class="section-title">Your Symptom Analysis</div>
                 <div>{{ symptom_summary | safe }}</div>
             </div>
+            {% endif %}
             
+            {% if meet_link %}
             <div class="section">
                 <div class="meet-link">
                     <p><strong>Google Meet Link:</strong> <a href="{{ meet_link }}">{{ meet_link }}</a></p>
                     <p>Click the link above at the scheduled time to join your consultation.</p>
                 </div>
             </div>
+            {% endif %}
+            
+            <div class="next-steps">
+                <h3>Next Steps:</h3>
+                <ul>
+                    <li>Be ready 5 minutes before your appointment time</li>
+                    <li>Ensure you have a stable internet connection</li>
+                    <li>Prepare any questions you want to ask the doctor</li>
+                    <li>Have your medical history ready if needed</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <p>Thank you for using MediAssist. We look forward to your consultation!</p>
+            </div>
+        </div>
+        
+        {% elif status == "rejected" %}
+        <div class="header rejected">
+            <h2>Appointment Update</h2>
+        </div>
+        <div class="content">
+            <div class="status-message status-rejected">
+                <h3>❌ Appointment Declined</h3>
+                <p>Unfortunately, {{ doctor_name }} is not available for the requested appointment time.</p>
+            </div>
+            
+            <div class="section">
+                <p>Dear Patient,</p>
+                <p>We regret to inform you that your appointment request with {{ doctor_name }} for {{ scheduled_time }} has been declined.</p>
+            </div>
+            
+            <div class="section doctor-info">
+                <div class="doctor-avatar">{{ doctor_name[0] if doctor_name else "D" }}</div>
+                <div class="doctor-details">
+                    <h3>{{ doctor_name }}</h3>
+                    {% if doctor_specialization %}
+                    <p>{{ doctor_specialization }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="section appointment-info">
+                <p><strong>Requested Date & Time:</strong> {{ scheduled_time }}</p>
+                <p><strong>Status:</strong> <span style="color: #dc3545;">Declined</span></p>
+            </div>
+            
+            <div class="next-steps">
+                <h3>What's Next?</h3>
+                <ul>
+                    <li>You can try booking with another available doctor</li>
+                    <li>Choose a different time slot with the same doctor</li>
+                    <li>Contact our support team for assistance</li>
+                    <li>Consider other specialists in the same field</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <p>We apologize for any inconvenience. Please don't hesitate to book another appointment that better fits both your schedule and the doctor's availability.</p>
+                <p>Thank you for using MediAssist.</p>
+            </div>
+        </div>
+        
+        {% else %}
+        <!-- Default fallback -->
+        <div class="header">
+            <h2>Appointment Notification</h2>
+        </div>
+        <div class="content">
+            <div class="section">
+                <p>Dear Patient,</p>
+                <p>This is a notification regarding your appointment with {{ doctor_name }}.</p>
+            </div>
+            
+            <div class="section appointment-info">
+                <p><strong>Date & Time:</strong> {{ scheduled_time }}</p>
+            </div>
             
             <div class="section">
                 <p>Thank you for using MediAssist.</p>
-                <p>Please be prepared 5 minutes before your appointment time.</p>
             </div>
         </div>
+        {% endif %}
     </body>
 </html>

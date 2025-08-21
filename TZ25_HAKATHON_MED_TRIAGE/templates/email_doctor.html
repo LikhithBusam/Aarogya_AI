@@ -103,9 +103,9 @@
             </div>
 
             <div class="action-buttons">
-                <a href="{{ url_for('handle_appointment_response', token=token, action='accept', _external=True) }}" 
+                <a href="{{ accept_url }}" 
                    class="action-button accept-button">Accept Appointment</a>
-                <a href="{{ url_for('handle_appointment_response', token=token, action='reject', _external=True) }}" 
+                <a href="{{ reject_url }}" 
                    class="action-button reject-button">Decline Appointment</a>
             </div>
             
@@ -114,8 +114,8 @@
                     If the buttons above don't work, you can copy and paste this link:
                 </p>
                 <p>
-                    {{ url_for('handle_appointment_response', token=token, action='accept', _external=True) }} (Accept)<br>
-                    {{ url_for('handle_appointment_response', token=token, action='reject', _external=True) }} (Decline)
+                    {{ accept_url }} (Accept)<br>
+                    {{ reject_url }} (Decline)
                 </p>
             </div>
             

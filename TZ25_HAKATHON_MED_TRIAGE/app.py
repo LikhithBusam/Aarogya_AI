@@ -5,6 +5,8 @@ import os
 import datetime
 import pickle
 import json
+import hashlib
+import time
 from werkzeug.utils import secure_filename
 from typing import List
 import traceback
@@ -1136,20 +1138,36 @@ def send_doctor_appointment_request(doctor_email, patient_email, scheduled_time,
                                  additional_symptoms=None, symptom_duration=None):
     """Send appointment request email to doctor with accept/reject buttons"""
     try:
+        # Find doctor information
+        doctor_info = next((d for d in DOCTORS if d['email'] == doctor_email), None)
+        if not doctor_info:
+            return {"success": False, "message": "Doctor not found"}
+        
+        # Generate unique appointment ID
+        import hashlib
+        import time
+        appointment_id = hashlib.md5(f"{doctor_email}{patient_email}{scheduled_time}{time.time()}".encode()).hexdigest()[:12]
+        
         # Generate appointment token
         appointment_data = {
+            'id': appointment_id,
             'doctor_email': doctor_email,
             'patient_email': patient_email,
             'appointment_time': scheduled_time,
             'meet_link': meet_link,
-            'doctor_name': next((d['name'] for d in DOCTORS if d['email'] == doctor_email), 'Doctor')
+            'doctor_name': doctor_info['name'],
+            'doctor_specialization': doctor_info['specialization'],
+            'symptom_summary': symptom_summary,
+            'primary_symptoms': primary_symptoms,
+            'additional_symptoms': additional_symptoms,
+            'symptom_duration': symptom_duration
         }
         token = generate_appointment_token(appointment_data)
         
         # Generate accept/reject URLs
         base_url = request.host_url.rstrip('/')
-        accept_url = f"{base_url}/appointment/accept/{token}"
-        reject_url = f"{base_url}/appointment/reject/{token}"
+        accept_url = f"{base_url}/appointment/response/{token}?action=accept"
+        reject_url = f"{base_url}/appointment/response/{token}?action=reject"
         
         # Render email template
         email_body = render_template('email_doctor.html',
@@ -1161,7 +1179,8 @@ def send_doctor_appointment_request(doctor_email, patient_email, scheduled_time,
             symptom_duration=symptom_duration,
             meet_link=meet_link,
             accept_url=accept_url,
-            reject_url=reject_url
+            reject_url=reject_url,
+            token=token
         )
         
         return send_email_with_attachments(
@@ -1177,11 +1196,12 @@ def send_doctor_appointment_request(doctor_email, patient_email, scheduled_time,
         traceback.print_exc()
         return {"success": False, "message": str(e)}
 
-def send_patient_confirmation_email(patient_email, doctor_name, scheduled_time, meet_link):
+def send_patient_confirmation_email(patient_email, doctor_name, scheduled_time, meet_link, doctor_specialization=None):
     """Send confirmation email to patient when doctor accepts"""
     try:
         email_body = render_template('email_patient.html',
             doctor_name=doctor_name,
+            doctor_specialization=doctor_specialization,
             scheduled_time=scheduled_time,
             meet_link=meet_link,
             status="accepted"
@@ -1199,11 +1219,12 @@ def send_patient_confirmation_email(patient_email, doctor_name, scheduled_time, 
         traceback.print_exc()
         return {"success": False, "message": str(e)}
 
-def send_patient_rejection_email(patient_email, doctor_name, scheduled_time):
+def send_patient_rejection_email(patient_email, doctor_name, scheduled_time, doctor_specialization=None):
     """Send rejection email to patient when doctor declines"""
     try:
         email_body = render_template('email_patient.html',
             doctor_name=doctor_name,
+            doctor_specialization=doctor_specialization,
             scheduled_time=scheduled_time,
             status="rejected"
         )
@@ -1287,36 +1308,24 @@ def schedule_meet_with_notification(scheduled_time, doctor_email, patient_email,
     # Render symptom summary from markdown to HTML for emails
     symptom_summary_html = markdown(description)
 
-    # Send detailed email to Doctor
+    # Send appointment request email to Doctor with accept/reject buttons
     if doctor_email:
-        doctor_email_body = render_template(
-            'email_doctor.html', 
-            patient_email=patient_email, 
-            scheduled_time=scheduled_time, 
-            symptom_summary=symptom_summary_html, 
-            meet_link=meet_link
+        result = send_doctor_appointment_request(
+            doctor_email=doctor_email,
+            patient_email=patient_email,
+            scheduled_time=scheduled_time,
+            symptom_summary=symptom_summary_html,
+            meet_link=meet_link,
+            attachments=attachments,
+            primary_symptoms=description,  # You can modify this to pass actual primary symptoms
+            additional_symptoms=None,  # You can modify this to pass additional symptoms
+            symptom_duration=None  # You can modify this to pass symptom duration
         )
-        send_email_with_attachments(
-            EMAIL_SENDER, EMAIL_PASSWORD, doctor_email,
-            "New Patient Appointment with Medical Records",
-            doctor_email_body, attachments
-        )
+        
+        if not result.get('success'):
+            print(f"Failed to send doctor appointment request: {result.get('message')}")
 
-    # Send confirmation email to Patient
-    if patient_email:
-        patient_email_body = render_template(
-            'email_patient.html', 
-            doctor_name=doctor_info['name'],
-            doctor_specialization=doctor_info['specialization'],
-            scheduled_time=scheduled_time, 
-            symptom_summary=symptom_summary_html, 
-            meet_link=meet_link
-        )
-        send_email_with_attachments(
-            EMAIL_SENDER, EMAIL_PASSWORD, patient_email,
-            f"Your Appointment with {doctor_info['name']} is Confirmed",
-            patient_email_body, None # No attachments for patient
-        )
+    # Note: Patient confirmation email will be sent only after doctor accepts the appointment
 
     return {
         "success": calendar_success,
@@ -1412,48 +1421,60 @@ def handle_appointment_response(token):
             return render_template('appointment_response.html', status='error')
         
         # Check if this appointment has already been responded to
-        if appointment_data.get('status'):
-            flash('This appointment has already been responded to', 'warning')
-            return render_template('appointment_response.html', status='already_handled')
+        appointment_id = appointment_data.get('id')
+        if appointment_id:
+            appointment_file = os.path.join(APPOINTMENTS_FOLDER, f'{appointment_id}.json')
+            if os.path.exists(appointment_file):
+                with open(appointment_file, 'r') as f:
+                    existing_data = json.load(f)
+                    if existing_data.get('status'):
+                        flash('This appointment has already been responded to', 'warning')
+                        return render_template('appointment_response.html', 
+                                           status='already_handled',
+                                           appointment=existing_data)
             
         # Mark the appointment as handled to prevent duplicate responses
         appointment_data['status'] = action
-        save_appointment_data(appointment_data)  # You'll need to implement this function
+        appointment_data['response_time'] = datetime.datetime.now().isoformat()
+        save_appointment_data(appointment_data)
         
         if action == 'accept':
             # Send confirmation to patient
-            email_body = render_template('email_patient.html',
-                doctor_name=appointment_data['doctor_name'],
-                doctor_specialization=appointment_data['doctor_specialization'],
-                scheduled_time=appointment_data['appointment_time'],
-                meet_link=appointment_data['meet_link'],
-                status='accepted'
+            result = send_patient_confirmation_email(
+                appointment_data['patient_email'],
+                appointment_data['doctor_name'],
+                appointment_data['appointment_time'],
+                appointment_data['meet_link'],
+                appointment_data.get('doctor_specialization')
             )
-            subject = f"Appointment Confirmed with {appointment_data['doctor_name']}"
-        else:
+            
+            if result.get('success'):
+                message = f"Appointment accepted successfully! Patient has been notified via email."
+            else:
+                message = f"Appointment accepted, but failed to notify patient: {result.get('message')}"
+                
+        else:  # action == 'reject'
             # Send rejection to patient
-            email_body = render_template('email_patient.html',
-                doctor_name=appointment_data['doctor_name'],
-                doctor_specialization=appointment_data['doctor_specialization'],
-                scheduled_time=appointment_data['appointment_time'],
-                status='rejected'
+            result = send_patient_rejection_email(
+                appointment_data['patient_email'],
+                appointment_data['doctor_name'],
+                appointment_data['appointment_time'],
+                appointment_data.get('doctor_specialization')
             )
-            subject = f"Appointment Update from {appointment_data['doctor_name']}"
-        
-        # Send email to patient
-        send_email_with_attachments(
-            EMAIL_SENDER,
-            EMAIL_PASSWORD,
-            appointment_data['patient_email'],
-            subject,
-            email_body
-        )
+            
+            if result.get('success'):
+                message = f"Appointment declined. Patient has been notified via email."
+            else:
+                message = f"Appointment declined, but failed to notify patient: {result.get('message')}"
         
         return render_template('appointment_response.html',
                            status='accepted' if action == 'accept' else 'rejected',
-                           appointment=appointment_data)
+                           appointment=appointment_data,
+                           message=message)
                            
     except Exception as e:
+        print(f"Error processing appointment response: {str(e)}")
+        traceback.print_exc()
         flash(f'Error processing appointment: {str(e)}', 'error')
         return render_template('appointment_response.html', status='error')
 
