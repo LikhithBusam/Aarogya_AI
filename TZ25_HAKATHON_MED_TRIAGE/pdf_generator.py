@@ -1,6 +1,7 @@
 import os
 import io
 import json
+from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 from reportlab.lib.pagesizes import A4
@@ -30,7 +31,6 @@ def _build_gemini_prompt(user_data: Dict[str, Any]) -> str:
     age = user_data.get("age", "Not provided")
     gender = user_data.get("gender", "Not specified")
     symptoms = user_data.get("symptoms", "No symptoms recorded")
-    severity = user_data.get("severity", "Not specified")
 
     lines: List[str] = []
     lines.append("You are a medical expert AI. Based on the provided patient information, generate a comprehensive health analysis report.")
@@ -42,7 +42,6 @@ def _build_gemini_prompt(user_data: Dict[str, Any]) -> str:
     lines.append("- Patient Age") 
     lines.append("- Patient Gender")
     lines.append("- Reported Symptoms")
-    lines.append("- Severity level")
     lines.append("")
     lines.append("Analysis Requirements:")
     lines.append("1. Provide detailed symptoms analysis explaining how reported symptoms relate to the predicted condition")
@@ -83,7 +82,6 @@ def _build_gemini_prompt(user_data: Dict[str, Any]) -> str:
     lines.append(f"- Age: {age}")
     lines.append(f"- Gender: {gender}")
     lines.append(f"- Reported symptoms: {symptoms}")
-    lines.append(f"- Severity: {severity}")
     return "\n".join(lines)
 
 
@@ -142,6 +140,9 @@ def _build_story(report: Dict[str, Any]) -> List[Any]:
     story.append(Paragraph("Patient Information", styles["SectionHeader"]))
     story.append(Spacer(1, 0.08 * inch))
     
+    # Get current date for report
+    report_date = datetime.now().strftime("%B %d, %Y")
+    
     # Create patient info table
     patient_data = [
         ["Name:", report.get("name", "Not provided")],
@@ -149,7 +150,7 @@ def _build_story(report: Dict[str, Any]) -> List[Any]:
         ["Gender:", report.get("gender", "Not specified")],
         ["Contact:", report.get("contact", "Not provided")],
         ["Reported Symptoms:", report.get("symptoms", "No symptoms recorded")],
-        ["Severity Level:", report.get("severity", "Not specified")]
+        ["Report Date:", report_date]
     ]
     
     patient_table = Table(patient_data, colWidths=[2*inch, 4*inch])
@@ -277,7 +278,6 @@ def generate_pdf(user_data: Dict[str, Any]) -> Tuple[bytes, str]:
         
         # Symptom information
         "symptoms": user_data.get("symptoms", "No symptoms recorded"),
-        "severity": user_data.get("severity", "Not specified"),
         
         # Medical analysis from AI
         "predicted_disease": ai_response.get("predicted_disease") or user_data.get("predicted_disease") or "Undetermined",
