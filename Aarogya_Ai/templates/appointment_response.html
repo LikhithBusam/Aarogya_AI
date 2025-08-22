@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Appointment Response</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-accepted {
+            color: #28a745;
+        }
+        .status-rejected {
+            color: #dc3545;
+        }
+        .status-error {
+            color: #dc3545;
+        }
+        .details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .details p {
+            margin: 10px 0;
+        }
+        .message {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                {% if status == 'accepted' %}
+                    <span class="status-accepted">Appointment Accepted</span>
+                {% elif status == 'rejected' %}
+                    <span class="status-rejected">Appointment Declined</span>
+                {% else %}
+                    <span class="status-error">Error Processing Request</span>
+                {% endif %}
+            </h1>
+        </div>
+
+        {% if status != 'error' and appointment %}
+            <div class="message">
+                {% if status == 'accepted' %}
+                    You have successfully accepted the appointment.
+                {% else %}
+                    You have declined the appointment.
+                {% endif %}
+            </div>
+
+            <div class="details">
+                <p><strong>Patient Email:</strong> {{ appointment.patient_email }}</p>
+                <p><strong>Appointment Time:</strong> {{ appointment.appointment_time }}</p>
+                {% if status == 'accepted' %}
+                    <p><strong>Meet Link:</strong> <a href="{{ appointment.meet_link }}">{{ appointment.meet_link }}</a></p>
+                {% endif %}
+            </div>
+
+            <p style="text-align: center">
+                A notification email has been sent to the patient.
+            </p>
+        {% else %}
+            <div class="message status-error">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {{ messages[0] }}
+                    {% else %}
+                        An error occurred while processing your request.
+                    {% endif %}
+                {% endwith %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

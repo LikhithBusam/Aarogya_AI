@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; }
+            .header { background-color: #3367d6; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .section { margin-bottom: 20px; }
+            .section-title { color: #3367d6; font-size: 18px; font-weight: bold; }
+            .appointment-info { background-color: #f5f7fa; border-left: 4px solid #3367d6; padding: 15px; margin-bottom: 20px; }
+            .meet-link { padding: 15px; background-color: #ebf3fe; border-radius: 5px; margin-bottom: 20px; }
+            .meet-link a { color: #3367d6; text-decoration: none; font-weight: bold; }
+            .symptom-report { 
+                background-color: #f8f9fa; 
+                padding: 15px; 
+                border-radius: 5px;
+                border: 1px solid #dee2e6;
+                margin-bottom: 20px;
+            }
+            .action-buttons {
+                text-align: center;
+                margin: 20px 0;
+            }
+            .action-button {
+                display: inline-block;
+                padding: 10px 30px;
+                margin: 0 10px;
+                border-radius: 5px;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            .accept-button {
+                background-color: #28a745;
+                color: white !important;
+            }
+            .reject-button {
+                background-color: #dc3545;
+                color: white !important;
+            }
+            .report-section {
+                margin-bottom: 15px;
+            }
+            .report-item {
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+            }
+            .report-label {
+                font-weight: bold;
+                color: #666;
+            }
+            pre { white-space: pre-wrap; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h2>Aarogya AI: New Patient Appointment</h2>
+        </div>
+        <div class="content">
+            <div class="section">
+                <p>Dear Doctor,</p>
+                <p>You have received a new appointment request. Please review the details and confirm your availability.</p>
+            </div>
+            
+            <div class="appointment-info">
+                <div class="report-section">
+                    <div class="report-item">
+                        <span class="report-label">Patient Email:</span>
+                        <span>{{ patient_email }}</span>
+                    </div>
+                    <div class="report-item">
+                        <span class="report-label">Scheduled Date & Time:</span>
+                        <span>{{ scheduled_time }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Patient Symptom Report</div>
+                <div class="symptom-report">
+                    <div class="report-section">
+                        <div class="report-item">
+                            <span class="report-label">Primary Symptoms:</span>
+                            <div>{{ primary_symptoms | safe }}</div>
+                        </div>
+                        {% if additional_symptoms %}
+                        <div class="report-item">
+                            <span class="report-label">Additional Symptoms:</span>
+                            <div>{{ additional_symptoms | safe }}</div>
+                        </div>
+                        {% endif %}
+                        {% if symptom_duration %}
+                        <div class="report-item">
+                            <span class="report-label">Duration:</span>
+                            <div>{{ symptom_duration }}</div>
+                        </div>
+                        {% endif %}
+                        <div class="report-item">
+                            <span class="report-label">AI Analysis:</span>
+                            <div>{{ symptom_summary | safe }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="{{ accept_url }}" 
+                   class="action-button accept-button">Accept Appointment</a>
+                <a href="{{ reject_url }}" 
+                   class="action-button reject-button">Decline Appointment</a>
+            </div>
+            
+            <div style="text-align: center; margin: 10px 0;">
+                <p style="font-size: 14px; color: #666;">
+                    If the buttons above don't work, you can copy and paste this link:
+                </p>
+                <p>
+                    {{ accept_url }} (Accept)<br>
+                    {{ reject_url }} (Decline)
+                </p>
+            </div>
+            
+            <div class="section">
+                <div class="meet-link">
+                    <p><strong>Proposed Google Meet Link:</strong></p>
+                    <p><a href="{{ meet_link }}">{{ meet_link }}</a></p>
+                    <p>This meeting will be scheduled upon your confirmation.</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <p>Patient medical records are attached for your review.</p>
+                <p>Thank you for using Aarogya AI.</p>
+            </div>
+        </div>
+    </body>
+</html>

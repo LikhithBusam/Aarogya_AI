@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Disease Prediction System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+
+      .header {
+        text-align: center;
+        padding: 2rem 1rem;
+        position: absolute;
+        width: 100%;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-content {
+        text-align: center;
+        flex: 1;
+      }
+
+      .user-info {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px 20px;
+        border-radius: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .user-welcome {
+        color: #2c3e50;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .logout-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.3s ease;
+      }
+
+      .logout-btn:hover {
+        background: #c0392b;
+      }
+
+      .site-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .tagline {
+        font-size: 1.2rem;
+        font-style: italic;
+        color: #34495e;
+        font-weight: 300;
+      }
+
+      body {
+        background-image: url("static/images/stethoscope.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+      }
+
+      .container {
+        min-height: 100vh;
+        display: flex;
+        padding: 2rem;
+      }
+
+      .left-section {
+        flex: 1;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 5rem;
+        padding-top: 8rem;
+      }
+
+      .stethoscope {
+        width: 150px;
+        object-fit: contain;
+      }
+
+      .text-content {
+        max-width: 450px;
+        margin-left: 6rem;
+        animation: slideFromLeft 1s ease-out forwards;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        color: #000;
+        margin-bottom: 2rem;
+      }
+
+      p {
+        font-size: 1.1rem;
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 0.8rem;
+      }
+
+      .right-section {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 3rem;
+      }
+
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        max-width: 500px;
+        margin-top: 2rem;
+        animation: slideFromRight 1s ease-out forwards;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.3s ease, background-color 0.3s ease,
+          box-shadow 0.3s ease;
+        transform: translateX(0);
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        background: white;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .card img {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.8rem;
+      }
+
+      .card h3 {
+        color: #333;
+        font-size: 1.1rem;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+        }
+
+        .card-grid {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+      }
+
+      /* Add keyframes for left slide animation */
+      @keyframes slideFromLeft {
+        0% {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Add keyframes for right slide animation */
+      @keyframes slideFromRight {
+        0% {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      } 
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div></div> <!-- Empty div for spacing -->
+      <div class="header-content">
+        <h1 class="site-title">AAROGYA AI</h1>
+        <div class="tagline">AI Solutions for a Healthier Tomorrow</div>
+      </div>
+      {% if user %}
+      <div class="user-info">
+        <div>
+          <p class="user-welcome">Welcome, {{ user.name }}!</p>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+      {% else %}
+      <div></div> <!-- Empty div for spacing -->
+      {% endif %}
+    </div>
+    <div class="container">
+      <div class="left-section">
+        <div class="text-content">
+         
+          <h2>Disease Prediction System</h2>
+          <p>
+            Select the symptoms you think you might have and it will predict the
+            disease or condition you could be suffering from.
+          </p>
+          <p>Then you could also look for hospitals/clinics for treatment.</p>
+          <p>
+            Finally your suggestions or comments in the comment box are always
+            welcome.
+          </p>
+        </div>
+      </div>
+
+      <div class="right-section">
+        <div class="card-grid">
+          <div class="card" onclick="window.location.href='/sel_sym'">
+            <img src="{{ url_for('static', filename='images/checklist.jpeg') }}" alt="Description">
+            <h3>Select Symptoms</h3>
+          </div>
+
+          <div class="card" onclick="window.location.href='/medical_history'">
+            <img src="{{ url_for('static', filename='images/diagnosis.jpeg') }}" alt="Diagnosis" />
+            <h3>Medical History Dashboard </h3>
+          </div>
+
+          <div class="card" onclick="window.location.href='/hospitals'">
+            <img src="{{ url_for('static', filename='images/hospital.png') }}" alt="Hospitals" />
+            <h3>Hospitals</h3>
+          </div>
+
+          <div class="card" onclick="navigate('Share feedback')">
+            <img src="{{ url_for('static', filename='images/review.jpg') }}" alt="Comments" />
+            <h3>Share feedback</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          window.location.href = '/logout';
+        }
+      }
+    </script>
+  </body>
+</html>

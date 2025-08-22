@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; }
+            .header { 
+                background-color: #3367d6; 
+                color: white; 
+                padding: 20px; 
+                text-align: center; 
+            }
+            .header.rejected {
+                background-color: #dc3545;
+            }
+            .content { padding: 20px; }
+            .section { margin-bottom: 20px; }
+            .section-title { color: #3367d6; font-size: 18px; font-weight: bold; }
+            .appointment-info { 
+                background-color: #f5f7fa; 
+                border-left: 4px solid #3367d6; 
+                padding: 15px; 
+                margin-bottom: 20px; 
+            }
+            .meet-link { 
+                padding: 15px; 
+                background-color: #ebf3fe; 
+                border-radius: 5px; 
+                margin-bottom: 20px; 
+            }
+            .meet-link a { 
+                color: #3367d6; 
+                text-decoration: none; 
+                font-weight: bold; 
+            }
+            .doctor-info { 
+                display: flex; 
+                align-items: center; 
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            .doctor-avatar { 
+                width: 60px; 
+                height: 60px; 
+                background: #3367d6; 
+                color: white; 
+                border-radius: 50%; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                margin-right: 15px; 
+                font-size: 24px; 
+            }
+            .doctor-details h3 {
+                margin: 0 0 5px 0;
+                color: #333;
+            }
+            .doctor-details p {
+                margin: 0;
+                color: #666;
+            }
+            .status-message {
+                text-align: center;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+            .status-accepted {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .status-rejected {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+            .next-steps {
+                background-color: #e9ecef;
+                padding: 15px;
+                border-radius: 5px;
+                margin-top: 20px;
+            }
+            .next-steps h3 {
+                margin-top: 0;
+                color: #495057;
+            }
+            .next-steps ul {
+                margin: 10px 0;
+                padding-left: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        {% if status == "accepted" %}
+        <div class="header">
+            <h2>Your Appointment is Confirmed!</h2>
+        </div>
+        <div class="content">
+            <div class="status-message status-accepted">
+                <h3>✅ Appointment Accepted</h3>
+                <p>Great news! {{ doctor_name }} has accepted your appointment request.</p>
+            </div>
+            
+            <div class="section">
+                <p>Dear Patient,</p>
+                <p>Your appointment with {{ doctor_name }} has been confirmed and scheduled successfully.</p>
+            </div>
+            
+            <div class="section doctor-info">
+                <div class="doctor-avatar">{{ doctor_name[0] if doctor_name else "D" }}</div>
+                <div class="doctor-details">
+                    <h3>{{ doctor_name }}</h3>
+                    {% if doctor_specialization %}
+                    <p>{{ doctor_specialization }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="section appointment-info">
+                <p><strong>Date & Time:</strong> {{ scheduled_time }}</p>
+            </div>
+            
+            {% if symptom_summary %}
+            <div class="section">
+                <div class="section-title">Your Symptom Analysis</div>
+                <div>{{ symptom_summary | safe }}</div>
+            </div>
+            {% endif %}
+            
+            {% if meet_link %}
+            <div class="section">
+                <div class="meet-link">
+                    <p><strong>Google Meet Link:</strong> <a href="{{ meet_link }}">{{ meet_link }}</a></p>
+                    <p>Click the link above at the scheduled time to join your consultation.</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="next-steps">
+                <h3>Next Steps:</h3>
+                <ul>
+                    <li>Be ready 5 minutes before your appointment time</li>
+                    <li>Ensure you have a stable internet connection</li>
+                    <li>Prepare any questions you want to ask the doctor</li>
+                    <li>Have your medical history ready if needed</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <p>Thank you for using Aarogya AI. We look forward to your consultation!</p>
+            </div>
+        </div>
+        
+        {% elif status == "rejected" %}
+        <div class="header rejected">
+            <h2>Appointment Update</h2>
+        </div>
+        <div class="content">
+            <div class="status-message status-rejected">
+                <h3>❌ Appointment Declined</h3>
+                <p>Unfortunately, {{ doctor_name }} is not available for the requested appointment time.</p>
+            </div>
+            
+            <div class="section">
+                <p>Dear Patient,</p>
+                <p>We regret to inform you that your appointment request with {{ doctor_name }} for {{ scheduled_time }} has been declined.</p>
+            </div>
+            
+            <div class="section doctor-info">
+                <div class="doctor-avatar">{{ doctor_name[0] if doctor_name else "D" }}</div>
+                <div class="doctor-details">
+                    <h3>{{ doctor_name }}</h3>
+                    {% if doctor_specialization %}
+                    <p>{{ doctor_specialization }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="section appointment-info">
+                <p><strong>Requested Date & Time:</strong> {{ scheduled_time }}</p>
+                <p><strong>Status:</strong> <span style="color: #dc3545;">Declined</span></p>
+            </div>
+            
+            <div class="next-steps">
+                <h3>What's Next?</h3>
+                <ul>
+                    <li>You can try booking with another available doctor</li>
+                    <li>Choose a different time slot with the same doctor</li>
+                    <li>Contact our support team for assistance</li>
+                    <li>Consider other specialists in the same field</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <p>We apologize for any inconvenience. Please don't hesitate to book another appointment that better fits both your schedule and the doctor's availability.</p>
+                <p>Thank you for using Aarogya AI.</p>
+            </div>
+        </div>
+        
+        {% else %}
+        <!-- Default fallback -->
+        <div class="header">
+            <h2>Appointment Notification</h2>
+        </div>
+        <div class="content">
+            <div class="section">
+                <p>Dear Patient,</p>
+                <p>This is a notification regarding your appointment with {{ doctor_name }}.</p>
+            </div>
+            
+            <div class="section appointment-info">
+                <p><strong>Date & Time:</strong> {{ scheduled_time }}</p>
+            </div>
+            
+            <div class="section">
+                <p>Thank you for using Aarogya AI.</p>
+            </div>
+        </div>
+        {% endif %}
+    </body>
+</html>
