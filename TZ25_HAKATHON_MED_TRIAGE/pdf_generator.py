@@ -201,7 +201,7 @@ def build_pdf(report: Dict[str, Any]) -> bytes:
         topMargin=56,
         bottomMargin=56,
         title="Symptom Analysis Report",
-        author="MediAssist AI"
+        author="Aarogya AI"
     )
     story = _build_story(report)
     doc.build(story)

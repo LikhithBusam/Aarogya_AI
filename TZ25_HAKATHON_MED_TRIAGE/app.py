@@ -84,34 +84,124 @@ def save_appointment_data(appointment_data):
 # --- Sample Data ---
 DOCTORS = [
     {
-        "id": "1", "name": "Dr. Sarah Johnson", "specialization": "Gastroenterologist",
-        "experience": 12, "languages": "English, Spanish", "consultation_fee": 1500,
+        "id": "1", "name": "Dr. Priya Sharma", "specialization": "Gastroenterologist",
+        "experience": 12, "languages": "Hindi, English, Marathi", "consultation_fee": 1500,
         "rating": 4.9, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
         "available_slots": ["09:00 AM", "11:30 AM", "02:00 PM", "04:30 PM"]
     },
     {
-        "id": "2", "name": "Dr. Robert Chen", "specialization": "Cardiologist",
-        "experience": 15, "languages": "English, Mandarin", "consultation_fee": 1800,
+        "id": "2", "name": "Dr. Arjun Reddy", "specialization": "Cardiologist",
+        "experience": 15, "languages": "Telugu, English, Hindi", "consultation_fee": 1800,
         "rating": 4.8, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
         "available_slots": ["10:00 AM", "01:00 PM", "03:30 PM", "05:00 PM"]
     },
     {
-        "id": "3", "name": "Dr. Priya Sharma", "specialization": "Dermatologist",
-        "experience": 10, "languages": "English, Hindi", "consultation_fee": 1200,
+        "id": "3", "name": "Dr. Kavitha Menon", "specialization": "Dermatologist",
+        "experience": 10, "languages": "Malayalam, English, Tamil", "consultation_fee": 1200,
         "rating": 4.7, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
         "available_slots": ["09:30 AM", "12:00 PM", "02:30 PM", "04:00 PM"]
     },
     {
-        "id": "4", "name": "Dr. Michael Wilson", "specialization": "Neurologist",
-        "experience": 14, "languages": "English", "consultation_fee": 2000,
+        "id": "4", "name": "Dr. Rajesh Kumar", "specialization": "Neurologist",
+        "experience": 14, "languages": "Hindi, English, Punjabi", "consultation_fee": 2000,
         "rating": 4.9, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
         "available_slots": ["08:30 AM", "11:00 AM", "01:30 PM", "05:30 PM"]
     },
     {
-        "id": "5", "name": "Dr. Lisa Thompson", "specialization": "Psychiatrist",
-        "experience": 11, "languages": "English, French", "consultation_fee": 1600,
+        "id": "5", "name": "Dr. Anjali Gupta", "specialization": "Psychiatrist",
+        "experience": 11, "languages": "Hindi, English, Bengali", "consultation_fee": 1600,
         "rating": 4.6, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
         "available_slots": ["10:30 AM", "12:30 PM", "03:00 PM", "05:30 PM"]
+    },
+    {
+        "id": "6", "name": "Dr. Suresh Iyer", "specialization": "Orthopedic Surgeon",
+        "experience": 18, "languages": "Tamil, English, Kannada", "consultation_fee": 2200,
+        "rating": 4.8, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM"]
+    },
+    {
+        "id": "7", "name": "Dr. Meera Patel", "specialization": "Pediatrician",
+        "experience": 13, "languages": "Gujarati, English, Hindi", "consultation_fee": 1400,
+        "rating": 4.9, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["08:00 AM", "10:30 AM", "01:00 PM", "03:30 PM"]
+    },
+    {
+        "id": "8", "name": "Dr. Vikram Singh", "specialization": "Urologist",
+        "experience": 16, "languages": "Punjabi, Hindi, English", "consultation_fee": 1900,
+        "rating": 4.7, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["09:30 AM", "12:00 PM", "02:30 PM", "05:00 PM"]
+    },
+    {
+        "id": "9", "name": "Dr. Lakshmi Rao", "specialization": "Gynecologist",
+        "experience": 14, "languages": "Kannada, English, Telugu", "consultation_fee": 1700,
+        "rating": 4.8, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["10:00 AM", "12:30 PM", "03:00 PM", "05:30 PM"]
+    },
+    {
+        "id": "10", "name": "Dr. Amit Joshi", "specialization": "Ophthalmologist",
+        "experience": 12, "languages": "Marathi, Hindi, English", "consultation_fee": 1300,
+        "rating": 4.6, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["08:30 AM", "11:30 AM", "01:30 PM", "04:30 PM"]
+    },
+    {
+        "id": "11", "name": "Dr. Deepika Nair", "specialization": "Endocrinologist",
+        "experience": 10, "languages": "Malayalam, English, Tamil", "consultation_fee": 1800,
+        "rating": 4.7, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM"]
+    },
+    {
+        "id": "12", "name": "Dr. Ravi Agarwal", "specialization": "Pulmonologist",
+        "experience": 17, "languages": "Hindi, English, Rajasthani", "consultation_fee": 2000,
+        "rating": 4.9, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["10:00 AM", "12:00 PM", "03:00 PM", "05:00 PM"]
+    },
+    {
+        "id": "13", "name": "Dr. Sushma Bhatt", "specialization": "Rheumatologist",
+        "experience": 11, "languages": "Gujarati, Hindi, English", "consultation_fee": 1600,
+        "rating": 4.5, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["09:30 AM", "11:30 AM", "01:30 PM", "04:30 PM"]
+    },
+    {
+        "id": "14", "name": "Dr. Karthik Krishnamurthy", "specialization": "Oncologist",
+        "experience": 19, "languages": "Tamil, English, Telugu", "consultation_fee": 2500,
+        "rating": 4.9, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["08:00 AM", "10:00 AM", "01:00 PM", "03:00 PM"]
+    },
+    {
+        "id": "15", "name": "Dr. Sunita Mishra", "specialization": "Nephrologist",
+        "experience": 13, "languages": "Hindi, English, Odia", "consultation_fee": 1900,
+        "rating": 4.8, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["09:00 AM", "11:30 AM", "02:30 PM", "05:00 PM"]
+    },
+    {
+        "id": "16", "name": "Dr. Harish Chandra", "specialization": "ENT Specialist",
+        "experience": 15, "languages": "Hindi, English, Punjabi", "consultation_fee": 1500,
+        "rating": 4.7, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["08:30 AM", "10:30 AM", "01:00 PM", "04:00 PM"]
+    },
+    {
+        "id": "17", "name": "Dr. Preeti Desai", "specialization": "Hematologist",
+        "experience": 12, "languages": "Gujarati, English, Hindi", "consultation_fee": 1800,
+        "rating": 4.6, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["10:00 AM", "12:30 PM", "02:00 PM", "04:30 PM"]
+    },
+    {
+        "id": "18", "name": "Dr. Manoj Tripathi", "specialization": "Anesthesiologist",
+        "experience": 14, "languages": "Hindi, English, Bengali", "consultation_fee": 1700,
+        "rating": 4.8, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["09:30 AM", "11:00 AM", "01:30 PM", "05:30 PM"]
+    },
+    {
+        "id": "19", "name": "Dr. Radha Venkatesh", "specialization": "Radiologist",
+        "experience": 16, "languages": "Tamil, English, Kannada", "consultation_fee": 1600,
+        "rating": 4.7, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["08:00 AM", "10:00 AM", "02:00 PM", "04:00 PM"]
+    },
+    {
+        "id": "20", "name": "Dr. Ashok Bansal", "specialization": "General Physician",
+        "experience": 20, "languages": "Hindi, English, Punjabi", "consultation_fee": 1200,
+        "rating": 4.9, "email": "likhith.b.polavaram@gmail.com", # Replace with actual doctor email
+        "available_slots": ["08:30 AM", "11:30 AM", "02:30 PM", "05:00 PM"]
     }
 ]
 
@@ -389,6 +479,10 @@ def sym_page1():
 def sym_page2():
     return render_template('add_sym.html')
 
+@app.route('/hospitals')
+def hospitals():
+    return render_template('hospitals.html')
+
 @app.route('/symptom_analysis')
 def symptom_analysis():
     global SYMPTOM_CONVERSATION
@@ -558,7 +652,11 @@ def book_appointment():
     recommended_specialist = "General Practitioner"
     specialist_types = [
         "Gastroenterologist", "Cardiologist", "Dermatologist", 
-        "Neurologist", "Psychiatrist", "Orthopedic", "Pulmonologist"
+        "Neurologist", "Psychiatrist", "Orthopedic Surgeon", "Pediatrician",
+        "Urologist", "Gynecologist", "Ophthalmologist", "Endocrinologist",
+        "Pulmonologist", "Rheumatologist", "Oncologist", "Nephrologist",
+        "ENT Specialist", "Hematologist", "Anesthesiologist", "Radiologist",
+        "General Physician"
     ]
     
     for specialist in specialist_types:

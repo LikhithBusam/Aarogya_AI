@@ -1,8 +1,8 @@
-Collecting workspace information# MediAssist - AI-Powered Healthcare Triage Platform
+Collecting workspace information# Aarogya AI - AI-Powered Healthcare Triage Platform
 
-MediAssist is an intelligent healthcare triage system that helps patients identify appropriate medical specialists based on their symptoms and facilitates remote consultations through video appointments.
+Aarogya AI is an intelligent healthcare triage system that helps patients identify appropriate medical specialists based on their symptoms and facilitates remote consultations through video appointments.
 
-![MediAssist Logo](https://img.icons8.com/color/96/000000/medical-doctor.png)
+![Aarogya AI Logo](https://img.icons8.com/color/96/000000/medical-doctor.png)
 
 ## Features
 
@@ -90,7 +90,7 @@ The application will be available at http://127.0.0.1:5000/
 ## Project Structure
 
 ```
-mediassist/
+aarogyaai/
 ├── __pycache__/            # Python bytecode cache
 ├── agents.py               # LangGraph AI agents for symptom analysis
 ├── app.py                  # Main Flask application
@@ -171,7 +171,7 @@ mediassist/
 
 ## AI Agent Architecture
 
-MediAssist uses a multi-agent system built with LangGraph:
+Aarogya AI uses a multi-agent system built with LangGraph:
 
 1. **Symptom Analysis Agent**:
    - Collects detailed information about reported symptoms

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Healthcare Nearby - Find Hospitals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: auto; }
+    header { text-align: center; margin-bottom: 30px; color: #2c3e50; }
+    .card-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .card { background: white; border-radius: 12px; padding: 20px; width: 300px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
+    .card:hover { transform: translateY(-5px); }
+    .hospital-page { display: none; }
+    .hospital-container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    #map { height: 500px; border-radius: 10px; }
+    .hospital-item { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+    .hospital-item:hover { background: #e8f4fc; }
+    #routeDetails { margin-top: 10px; padding: 10px; background: #fff; border-radius: 8px; display: none; }
+    button { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; }
+    #back-btn { background: #7f8c8d; color: white; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Healthcare Nearby</h1>
+    <p>Find the nearest hospitals within 5 km and get directions instantly</p>
+  </header>
+
+  <!-- Main Cards -->
+  <div class="card-container" id="main-cards">
+    <div class="card" id="hospital-card">
+      <h2><i class="fas fa-hospital"></i> Find Hospitals</h2>
+      <p>Click here to find hospitals near your location.</p>
+    </div>
+  </div>
+
+  <!-- Hospital Page -->
+  <div class="hospital-page" id="hospital-page">
+    <button id="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+    <div class="hospital-container">
+      <div>
+        <h3>Nearby Hospitals (within 5 km)</h3>
+        <div id="hospitals"></div>
+      </div>
+      <div>
+        <h3>Directions Map</h3>
+        <div id="map"></div>
+        <div id="routeDetails">
+          <p id="routeDistance"></p>
+          <p id="routeDuration"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet + Axios -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  let map, routeLayer, userCoords;
+  const hospitalsList = document.getElementById('hospitals');
+  const routeDetails = document.getElementById('routeDetails');
+  const routeDistance = document.getElementById('routeDistance');
+  const routeDuration = document.getElementById('routeDuration');
+
+  // Init map
+  function initMap(lat=12.9716, lng=77.5946) {
+    map = L.map('map').setView([lat, lng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+  }
+
+  // Get hospitals within 5 km using Overpass API
+  async function getNearbyHospitals(lat, lng) {
+    const query = `
+      [out:json];
+      (
+        node["amenity"="hospital"](around:5000,${lat},${lng});
+        way["amenity"="hospital"](around:5000,${lat},${lng});
+        relation["amenity"="hospital"](around:5000,${lat},${lng});
+      );
+      out center;
+    `;
+    const res = await axios.post("https://overpass-api.de/api/interpreter", query, {
+      headers: { "Content-Type": "text/plain" }
+    });
+    return res.data.elements;
+  }
+
+  // Get route from OSRM
+  async function getRoute(start, end) {
+    const res = await axios.get(
+      `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}`,
+      { params: { overview: "full", geometries: "geojson" } }
+    );
+    if (res.data.routes.length > 0) return res.data.routes[0];
+    return null;
+  }
+
+  // Draw route
+  function drawRoute(route) {
+    if (routeLayer) map.removeLayer(routeLayer);
+    const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+    routeLayer = L.polyline(coords, { color: "blue" }).addTo(map);
+    map.fitBounds(routeLayer.getBounds());
+    routeDistance.textContent = "Distance: " + (route.distance/1000).toFixed(2) + " km";
+    routeDuration.textContent = "Estimated Time: " + Math.round(route.duration/60) + " mins";
+    routeDetails.style.display = "block";
+  }
+
+  // Show hospitals in list
+  function displayHospitals(hospitals) {
+    hospitalsList.innerHTML = "";
+    if (hospitals.length === 0) {
+      hospitalsList.innerHTML = "<p>No hospitals found within 5 km.</p>";
+      return;
+    }
+    hospitals.forEach(h => {
+      const name = h.tags.name || "Unnamed Hospital";
+      const lat = h.lat || h.center.lat;
+      const lng = h.lon || h.center.lon;
+      const addr = h.tags["addr:full"] || h.tags["addr:street"] || "";
+
+      const div = document.createElement("div");
+      div.className = "hospital-item";
+      div.innerHTML = `<h4>${name}</h4><p>${addr}</p>`;
+      div.onclick = async () => {
+        const hospitalCoords = { lat, lng };
+        L.marker([lat, lng]).addTo(map).bindPopup(name).openPopup();
+        const route = await getRoute(userCoords, hospitalCoords);
+        if (route) drawRoute(route);
+      };
+      hospitalsList.appendChild(div);
+    });
+  }
+
+  // Detect user location & load hospitals
+  function detectLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async pos => {
+        userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        initMap(userCoords.lat, userCoords.lng);
+        L.marker([userCoords.lat, userCoords.lng]).addTo(map).bindPopup("You are here").openPopup();
+        const hospitals = await getNearbyHospitals(userCoords.lat, userCoords.lng);
+        displayHospitals(hospitals);
+      }, () => { alert("Location access denied."); });
+    } else {
+      alert("Geolocation not supported by your browser.");
+    }
+  }
+
+  // Event binding
+  document.getElementById('hospital-card').onclick = () => {
+    document.getElementById('main-cards').style.display = "none";
+    document.getElementById('hospital-page').style.display = "block";
+    detectLocation();
+  };
+  document.getElementById('back-btn').onclick = () => {
+    document.getElementById('hospital-page').style.display = "none";
+    document.getElementById('main-cards').style.display = "flex";
+    if (map) map.remove();
+  };
+</script>
+</body>
+</html>
