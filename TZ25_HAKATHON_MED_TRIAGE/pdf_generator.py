@@ -26,41 +26,61 @@ def _configure_gemini() -> None:
 
 
 def _build_gemini_prompt(user_data: Dict[str, Any]) -> str:
-    gender = user_data.get("gender") or "Unspecified"
-    symptoms = user_data.get("symptoms") or ""
-    severity = user_data.get("severity") or "not provided"
+    name = user_data.get("name", "Not provided")
+    age = user_data.get("age", "Not provided")
+    gender = user_data.get("gender", "Not specified")
+    symptoms = user_data.get("symptoms", "No symptoms recorded")
+    severity = user_data.get("severity", "Not specified")
 
     lines: List[str] = []
-    lines.append("You are a medical report generator. Based strictly on the provided input, generate a structured health report.")
+    lines.append("You are a medical expert AI. Based on the provided patient information, generate a comprehensive health analysis report.")
     lines.append("")
-    lines.append("Inputs:")
-    lines.append("- User Gender")
+    lines.append("IMPORTANT: Provide accurate, specific medical information based on the symptoms. Be precise and informative.")
+    lines.append("")
+    lines.append("Patient Information:")
+    lines.append("- Patient Name")
+    lines.append("- Patient Age") 
+    lines.append("- Patient Gender")
     lines.append("- Reported Symptoms")
-    lines.append("- (Optional) Severity level")
+    lines.append("- Severity level")
     lines.append("")
-    lines.append("Rules:")
-    lines.append("1. If severity is provided → consider BOTH symptoms and severity while predicting disease, medicines, diet, etc.")
-    lines.append("2. If severity is not provided → base the outcome ONLY on the symptoms.")
-    lines.append("3. Always return the output in the following JSON structure:")
+    lines.append("Analysis Requirements:")
+    lines.append("1. Provide detailed symptoms analysis explaining how reported symptoms relate to the predicted condition")
+    lines.append("2. Give specific, accurate risks if the condition is left untreated")
+    lines.append("3. Consider patient's age and gender for personalized recommendations")
+    lines.append("4. Provide evidence-based medical information")
+    lines.append("")
+    lines.append("Return ONLY valid JSON in this exact format:")
     lines.append("")
     lines.append("{")
     lines.append('  "gender": "string",')
-    lines.append('  "predicted_disease": "string",')
-    lines.append('  "description": "medical description based on symptoms (and severity if provided)",')
+    lines.append('  "predicted_disease": "string - most likely condition based on symptoms",')
+    lines.append('  "description": "detailed medical description of the condition",')
+    lines.append('  "symptoms_analysis": "2-3 line concise explanation of how the reported symptoms relate to the predicted condition",')
+    lines.append('  "risks_if_untreated": "2-3 line specific medical risks if this condition is not treated",')
     lines.append('  "recommended_medicines": [')
-    lines.append('    {"name": "medicine name", "dosage": "dosage details", "notes": "special notes"}')
+    lines.append('    {"name": "medicine name 1", "dosage": "age-appropriate dosage", "notes": "administration notes"},')
+    lines.append('    {"name": "medicine name 2", "dosage": "age-appropriate dosage", "notes": "administration notes"},')
+    lines.append('    {"name": "medicine name 3", "dosage": "age-appropriate dosage", "notes": "administration notes"}')
     lines.append('  ],')
-    lines.append('  "suggested_diet": ["diet recommendation 1", "diet recommendation 2"],')
-    lines.append('  "workout_exercise": ["exercise recommendation 1", "exercise recommendation 2"]')
+    lines.append('  "suggested_diet": ["specific dietary recommendation 1", "specific dietary recommendation 2"],')
+    lines.append('  "workout_exercise": ["age and condition appropriate exercise 1", "age and condition appropriate exercise 2"]')
     lines.append("}")
     lines.append("")
-    lines.append("Formatting Rules:")
-    lines.append('- "recommended_medicines" must always be a list of objects with clear "name", "dosage", and "notes".')
-    lines.append('- "suggested_diet" and "workout_exercise" must be lists of bullet-point style strings.')
-    lines.append('- Keep explanations short, symptom-specific, and avoid generic medical advice.')
-    lines.append('- Do NOT return free text, only valid JSON (no markdown, no code fences).')
+    lines.append("Critical Rules:")
+    lines.append('- symptoms_analysis: MAXIMUM 2-3 lines explaining symptom correlation')
+    lines.append('- risks_if_untreated: MAXIMUM 2-3 lines of specific medical risks')
+    lines.append('- recommended_medicines: MUST provide exactly 3 medicines with proper names, dosages, and notes')
+    lines.append('- Provide real medicine names commonly used for the predicted condition')
+    lines.append('- Keep all explanations concise and focused')
+    lines.append('- Consider age for medication dosing and exercise recommendations')
+    lines.append('- Consider gender for condition-specific advice when relevant')
+    lines.append('- Do NOT use generic templates - provide specific but brief analysis')
+    lines.append('- Return ONLY JSON, no markdown, no explanations, no code blocks')
     lines.append("")
-    lines.append("Patient context (use ONLY this information):")
+    lines.append("Patient Details:")
+    lines.append(f"- Name: {name}")
+    lines.append(f"- Age: {age}")
     lines.append(f"- Gender: {gender}")
     lines.append(f"- Reported symptoms: {symptoms}")
     lines.append(f"- Severity: {severity}")
@@ -95,9 +115,11 @@ def _call_gemini(user_data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Minimal fallback structure
     return {
-        "gender": user_data.get("gender") or "Unspecified",
+        "gender": user_data.get("gender") or "Not specified",
         "predicted_disease": user_data.get("predicted_disease") or "Undetermined",
-        "description": "Insufficient information to provide a detailed description.",
+        "description": f"Medical analysis for {user_data.get('name', 'patient')} requires further evaluation.",
+        "symptoms_analysis": f"The reported symptoms ({user_data.get('symptoms', 'none provided')}) need medical assessment for accurate diagnosis.",
+        "risks_if_untreated": "Consult healthcare professional for risk assessment and proper treatment guidance.",
         "recommended_medicines": [],
         "suggested_diet": [],
         "workout_exercise": []
@@ -116,58 +138,83 @@ def _build_story(report: Dict[str, Any]) -> List[Any]:
     story.append(Paragraph("Symptom Analysis Report", styles["TitleBlue"]))
     story.append(Spacer(1, 0.15 * inch))
 
-    # Patient summary
-    gender = report.get("gender", "Unspecified")
-    predicted = report.get("predicted_disease", "Undetermined")
-    story.append(Paragraph("Patient Overview", styles["SectionHeader"]))
+    # Patient Information Section
+    story.append(Paragraph("Patient Information", styles["SectionHeader"]))
     story.append(Spacer(1, 0.08 * inch))
-    story.append(Paragraph(f"<b>Gender:</b> {gender}", styles["NormalGray"]))
-    story.append(Paragraph(f"<b>Predicted Disease:</b> {predicted}", styles["NormalGray"]))
+    
+    # Create patient info table
+    patient_data = [
+        ["Name:", report.get("name", "Not provided")],
+        ["Age:", str(report.get("age", "Not provided"))],
+        ["Gender:", report.get("gender", "Not specified")],
+        ["Contact:", report.get("contact", "Not provided")],
+        ["Reported Symptoms:", report.get("symptoms", "No symptoms recorded")],
+        ["Severity Level:", report.get("severity", "Not specified")]
+    ]
+    
+    patient_table = Table(patient_data, colWidths=[2*inch, 4*inch])
+    patient_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+    ]))
+    story.append(patient_table)
+    story.append(Spacer(1, 0.2 * inch))
+
+    # Medical Analysis Section
+    predicted = report.get("predicted_disease", "Undetermined")
+    story.append(Paragraph("Medical Analysis", styles["SectionHeader"]))
+    story.append(Spacer(1, 0.08 * inch))
+    story.append(Paragraph(f"<b>Predicted Condition:</b> {predicted}", styles["NormalGray"]))
     story.append(Spacer(1, 0.15 * inch))
 
-    # Description (disease name, brief info, symptom linkage, risks)
-    description = report.get("description") or ""
-    predicted_disease = report.get("predicted_disease", "Undetermined")
-    symptoms = report.get("symptoms", "")
-    severity = report.get("severity", "")
-    # Compose a structured description if not already present
+    # Clinical Description
+    description = report.get("description", "")
     if description:
         story.append(Paragraph("Clinical Description", styles["SectionHeader"]))
         story.append(Spacer(1, 0.08 * inch))
-        # If description does not follow the required format, reformat it
-        # Always build the description in the required format
-    disease_info = f"<b>Disease:</b> {predicted_disease}.<br/>"
-    # Use model's description for 'About', fallback only if missing
-    about_text = description if description.strip() else "No detailed information available for this disease."
-    brief_info = f"<b>About:</b> {about_text}<br/>"
-    symptom_link = f"<b>Symptoms:</b> The reported symptoms ({symptoms})" + (f" with severity {severity}" if severity else "") + f" are commonly associated with {predicted_disease}.<br/>"
-    risks = f"<b>Risks if untreated:</b> Potential risks may occur if {predicted_disease} is not treated promptly.<br/>"
-    description = disease_info + brief_info + symptom_link + risks
-    story.append(Paragraph(description.replace("\n", "<br/>"), styles["NormalGray"]))
-    story.append(Spacer(1, 0.15 * inch))
+        story.append(Paragraph(description, styles["NormalGray"]))
+        story.append(Spacer(1, 0.15 * inch))
 
-    # Allopathic and Ayurvedic recommendations
-    allopathy: List[Dict[str, str]] = report.get("recommended_medicines") or []
-    ayurveda: List[Dict[str, str]] = report.get("ayurvedic_remedies") or []
-    if allopathy or ayurveda:
+    # Symptoms Analysis - AI Generated
+    symptoms_analysis = report.get("symptoms_analysis", "")
+    if symptoms_analysis:
+        story.append(Paragraph("Symptoms Analysis", styles["SectionHeader"]))
+        story.append(Spacer(1, 0.08 * inch))
+        story.append(Paragraph(symptoms_analysis, styles["NormalGray"]))
+        story.append(Spacer(1, 0.15 * inch))
+
+    # Risk Assessment - AI Generated
+    risks_untreated = report.get("risks_if_untreated", "")
+    if risks_untreated:
+        story.append(Paragraph("Risks if Untreated", styles["SectionHeader"]))
+        story.append(Spacer(1, 0.08 * inch))
+        story.append(Paragraph(risks_untreated, styles["NormalGray"]))
+        story.append(Spacer(1, 0.15 * inch))
+
+    # Recommended Medicines - Enhanced formatting
+    medicines: List[Dict[str, str]] = report.get("recommended_medicines") or []
+    if medicines:
         story.append(Paragraph("Recommended Medicines", styles["SectionHeader"]))
         story.append(Spacer(1, 0.08 * inch))
-        if allopathy:
-            story.append(Paragraph("Allopathy:", styles["NormalGray"]))
-            for med in allopathy:
-                med_name = med.get("name", "-")
-                med_dosage = med.get("dosage", "-")
-                med_notes = med.get("notes", "-")
-                bullet = f"• {med_name} {med_dosage} {med_notes}".replace("  ", " ").strip()
-                story.append(Paragraph(bullet, styles["NormalGray"]))
-        if ayurveda:
-            story.append(Spacer(1, 0.08 * inch))
-            story.append(Paragraph("Ayurveda:", styles["NormalGray"]))
-            for remedy in ayurveda:
-                remedy_name = remedy.get("name", "-")
-                usage = remedy.get("usage", "-")
-                bullet = f"• {remedy_name} ({usage})"
-                story.append(Paragraph(bullet, styles["NormalGray"]))
+        
+        for i, med in enumerate(medicines, 1):
+            med_name = med.get("name", f"Medicine {i}")
+            med_dosage = med.get("dosage", "As prescribed")
+            med_notes = med.get("notes", "Follow doctor's guidance")
+            
+            # Format with bold medicine name
+            medicine_text = f"• <b>{med_name}</b> - {med_dosage}"
+            if med_notes and med_notes != "As prescribed" and med_notes != "Follow doctor's guidance":
+                medicine_text += f" ({med_notes})"
+            
+            story.append(Paragraph(medicine_text, styles["NormalGray"]))
+        
         story.append(Spacer(1, 0.15 * inch))
 
     # Diet
@@ -214,7 +261,7 @@ def generate_pdf(user_data: Dict[str, Any]) -> Tuple[bytes, str]:
     """Generate a PDF based on user data using Gemini for structured content.
 
     Args:
-        user_data: Dict with optional keys: gender, symptoms, predicted_disease, analysis_summary
+        user_data: Dict with user information including name, age, contact, gender, symptoms, etc.
 
     Returns:
         (pdf_bytes, filename)
@@ -222,17 +269,37 @@ def generate_pdf(user_data: Dict[str, Any]) -> Tuple[bytes, str]:
     ai_response: Dict[str, Any] = _call_gemini(user_data)
 
     report_merged = {
-        "gender": ai_response.get("gender") or user_data.get("gender") or "Unspecified",
+        # User personal information
+        "name": user_data.get("name", "Not provided"),
+        "age": user_data.get("age", "Not provided"),
+        "contact": user_data.get("contact", "Not provided"),
+        "gender": ai_response.get("gender") or user_data.get("gender") or "Not specified",
+        
+        # Symptom information
+        "symptoms": user_data.get("symptoms", "No symptoms recorded"),
+        "severity": user_data.get("severity", "Not specified"),
+        
+        # Medical analysis from AI
         "predicted_disease": ai_response.get("predicted_disease") or user_data.get("predicted_disease") or "Undetermined",
-        "description": ai_response.get("description") or "",
+        "description": ai_response.get("description") or user_data.get("analysis_summary", ""),
+        
+        # Enhanced AI analysis sections
+        "symptoms_analysis": ai_response.get("symptoms_analysis", "No detailed symptoms analysis available."),
+        "risks_if_untreated": ai_response.get("risks_if_untreated", "Risk assessment not available."),
+        
+        # Treatment recommendations
         "recommended_medicines": ai_response.get("recommended_medicines") or [],
         "suggested_diet": ai_response.get("suggested_diet") or [],
         "workout_exercise": ai_response.get("workout_exercise") or []
     }
 
     pdf_bytes = build_pdf(report_merged)
-    predicted_for_name = report_merged.get("predicted_disease", "report").replace(" ", "_")
-    filename = f"symptom_report_{predicted_for_name or 'report'}.pdf"
+    
+    # Generate filename with user name if available
+    user_name = user_data.get("name", "").replace(" ", "_") if user_data.get("name") != "Not provided" else "user"
+    predicted_condition = report_merged.get("predicted_disease", "report").replace(" ", "_")
+    filename = f"{user_name}_symptom_report_{predicted_condition}.pdf"
+    
     return pdf_bytes, filename
 
 

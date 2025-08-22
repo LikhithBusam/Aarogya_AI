@@ -601,22 +601,42 @@ def send_message():
             'show_booking': False
         })
 
+@app.route('/api/set_gender', methods=['POST'])
+def set_gender():
+    try:
+        data = request.get_json()
+        gender = data.get('gender')
+        
+        if gender in ['Male', 'Female']:
+            session['user_gender'] = gender
+            return jsonify({'success': True, 'message': 'Gender set successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Invalid gender selection'})
+    except Exception as e:
+        print(f"Error setting gender: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error setting gender'})
+
 @app.route('/download_report', methods=['GET'])
 def download_report():
     """Generate and stream a PDF report based on user's latest analysis."""
     try:
-        # Gather user data from session
-        gender = session.get('gender')
-        symptoms = session.get('initial_symptoms', '')
-        severity = session.get('severity') or (session.get('symptom_details') or {}).get('severity') or 'unspecified'
-        summary = session.get('symptom_summary', '')
-
+        # Gather comprehensive user data from session
         user_data = {
-            'gender': gender,
-            'symptoms': symptoms,
-            'severity': severity,
-            'predicted_disease': None,
-            'analysis_summary': summary,
+            # User login information
+            'name': session.get('user_name', 'Not provided'),
+            'age': session.get('user_age', 'Not provided'),
+            'contact': session.get('user_contact', 'Not provided'),
+            
+            # Gender from sex.html
+            'gender': session.get('user_gender', session.get('gender', 'Not specified')),
+            
+            # Symptom information
+            'symptoms': session.get('initial_symptoms', 'No symptoms recorded'),
+            'severity': session.get('severity') or (session.get('symptom_details') or {}).get('severity') or 'Not specified',
+            
+            # Analysis data
+            'predicted_disease': session.get('predicted_disease'),
+            'analysis_summary': session.get('symptom_summary', 'No analysis summary available'),
         }
 
         pdf_bytes, filename = generate_pdf(user_data)
