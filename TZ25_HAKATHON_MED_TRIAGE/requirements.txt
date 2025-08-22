@@ -12,6 +12,7 @@ langchain-core
 langchain-groq
 groq
 openai
+google-generativeai
 
 # Markdown processing
 markdown
@@ -36,6 +37,7 @@ requests
 pytz
 python-dateutil
 six
+reportlab
 
 # Development tools (optional)
 pytest
