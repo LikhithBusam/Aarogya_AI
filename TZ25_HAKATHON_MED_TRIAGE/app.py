@@ -835,5 +835,87 @@ def appointment_confirmation():
     
     return render_template('appointment_confirmation.html', appointment=appointment)
 
+@app.route('/medical_history')
+def medical_history():
+    """Medical History Dashboard page"""
+    if 'user_name' not in session:
+        return redirect(url_for('login'))
+    
+    # Gather current medical status and previous symptoms
+    medical_data = {
+        # User information
+        'user_name': session.get('user_name', 'Not provided'),
+        'user_age': session.get('user_age', 'Not provided'),
+        'user_contact': session.get('user_contact', 'Not provided'),
+        'user_gender': session.get('user_gender', 'Not specified'),
+        
+        # Current medical status
+        'current_symptoms': session.get('initial_symptoms'),
+        'predicted_disease': session.get('predicted_disease'),
+        'symptom_summary': session.get('symptom_summary'),
+        
+        # Previous symptoms from session history
+        'previous_symptoms': session.get('symptom_history', []),
+        
+        # Check if user has any medical data
+        'has_medical_data': bool(session.get('initial_symptoms') or session.get('predicted_disease')),
+        
+        # Uploaded reports
+        'uploaded_reports': session.get('uploaded_reports', [])
+    }
+    
+    return render_template('medical_history.html', user=session, medical_data=medical_data)
+
+@app.route('/upload_medical_report', methods=['POST'])
+def upload_medical_report():
+    """Handle medical report file uploads"""
+    if 'user_name' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+    
+    try:
+        if 'medical_report' not in request.files:
+            return jsonify({'success': False, 'message': 'No file selected'})
+        
+        file = request.files['medical_report']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'})
+        
+        # Check file type
+        allowed_extensions = {'pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'}
+        if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
+            return jsonify({'success': False, 'message': 'Invalid file type. Please upload PDF, DOC, DOCX, or image files.'})
+        
+        # Create uploads directory if it doesn't exist
+        upload_folder = os.path.join(app.root_path, 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Secure filename and save
+        filename = secure_filename(file.filename)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"{session['user_name']}_{timestamp}_{filename}"
+        file_path = os.path.join(upload_folder, safe_filename)
+        
+        file.save(file_path)
+        
+        # Store in session
+        if 'uploaded_reports' not in session:
+            session['uploaded_reports'] = []
+        
+        report_info = {
+            'filename': filename,
+            'safe_filename': safe_filename,
+            'upload_date': datetime.datetime.now().strftime("%B %d, %Y at %I:%M %p"),
+            'file_size': os.path.getsize(file_path)
+        }
+        
+        session['uploaded_reports'].append(report_info)
+        session.modified = True
+        
+        return jsonify({'success': True, 'message': 'Medical report uploaded successfully'})
+        
+    except Exception as e:
+        print(f"Error uploading file: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error uploading file. Please try again.'})
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
