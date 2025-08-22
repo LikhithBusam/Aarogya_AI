@@ -463,28 +463,95 @@ def schedule_meet_with_notification(scheduled_time, doctor_email, patient_email,
 def home():
     return render_template('home.html')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    try:
+        name = request.form.get('name', '').strip()
+        age = request.form.get('age', '').strip()
+        contact = request.form.get('contact', '').strip()
+        
+        # Basic validation
+        if not all([name, age, contact]):
+            return jsonify({'success': False, 'message': 'Please fill in all fields'})
+        
+        try:
+            age_int = int(age)
+            if age_int < 1 or age_int > 120:
+                return jsonify({'success': False, 'message': 'Please enter a valid age between 1 and 120'})
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Please enter a valid age'})
+        
+        if len(contact) < 10 or not contact.replace('+', '').replace('-', '').replace(' ', '').isdigit():
+            return jsonify({'success': False, 'message': 'Please enter a valid contact number'})
+        
+        # Store user data in session
+        session['user_logged_in'] = True
+        session['user_name'] = name
+        session['user_age'] = age_int
+        session['user_contact'] = contact
+        
+        return jsonify({'success': True, 'message': 'Login successful!'})
+        
+    except Exception as e:
+        print(f"Error during login: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred during login'})
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
+
 @app.route('/home')
 def home_page():
-    return render_template('index.html')
+    # Check if user is logged in
+    if not session.get('user_logged_in'):
+        return redirect(url_for('login'))
+    
+    user_data = {
+        'name': session.get('user_name'),
+        'age': session.get('user_age'),
+        'contact': session.get('user_contact')
+    }
+    return render_template('index.html', user=user_data)
 
 @app.route('/sel_sym')
 def sym_page():
+    # Check if user is logged in
+    if not session.get('user_logged_in'):
+        return redirect(url_for('login'))
     return render_template('symptoms.html')
     
 @app.route('/sel_sym1')
 def sym_page1():
+    # Check if user is logged in
+    if not session.get('user_logged_in'):
+        return redirect(url_for('login'))
     return render_template('sex.html')
 
 @app.route('/sel_sym2')
 def sym_page2():
+    # Check if user is logged in
+    if not session.get('user_logged_in'):
+        return redirect(url_for('login'))
     return render_template('add_sym.html')
 
 @app.route('/hospitals')
 def hospitals():
+    # Check if user is logged in
+    if not session.get('user_logged_in'):
+        return redirect(url_for('login'))
     return render_template('hospitals.html')
 
 @app.route('/symptom_analysis')
 def symptom_analysis():
+    # Check if user is logged in
+    if not session.get('user_logged_in'):
+        return redirect(url_for('login'))
+        
     global SYMPTOM_CONVERSATION
     SYMPTOM_CONVERSATION.clear()
     
@@ -639,6 +706,10 @@ def handle_appointment_response(token):
 
 @app.route('/book_appointment')
 def book_appointment():
+    # Check if user is logged in
+    if not session.get('user_logged_in'):
+        return redirect(url_for('login'))
+        
     summary = ""
     # Find the last AI message, preferably one with a recommendation
     for msg in reversed(SYMPTOM_CONVERSATION):
